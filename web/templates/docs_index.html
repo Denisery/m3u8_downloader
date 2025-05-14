@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Documentation - M3U8 Downloader Bot{% endblock %}
+
+{% block content %}
+<div class="docs-container">
+    <h1>Documentation</h1>
+    
+    <p>Welcome to the M3U8 Downloader Bot documentation. Here you'll find comprehensive guides and documentation to help you start working with our Telegram bot as quickly as possible.</p>
+    
+    <div class="section-nav">
+        {% for section in sections %}
+        <div class="section-nav-item">
+            <h3><a href="{{ section.url }}">{{ section.title }}</a></h3>
+            <p>{{ section.description }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <h2>Getting Started</h2>
+    
+    <p>The M3U8 Downloader Bot is a Telegram bot that allows you to download and process M3U8 video streams. It's designed to be easy to use and highly configurable.</p>
+    
+    <div class="alert alert-info">
+        <span class="alert-icon">ℹ️</span>
+        <div>
+            <p><strong>New to M3U8?</strong> M3U8 is a file format used for multimedia playlists, primarily for streaming audio and video. It's commonly used by streaming services to deliver content.</p>
+        </div>
+    </div>
+    
+    <h3>Quick Start</h3>
+    
+    <ol>
+        <li>Start a chat with the bot on Telegram</li>
+        <li>Send an M3U8 URL to the bot</li>
+        <li>Wait for the bot to download and process the video</li>
+        <li>Receive the processed video file</li>
+    </ol>
+    
+    <h3>Documentation Sections</h3>
+    
+    <ul>
+        {% for section in sections %}
+        <li><a href="{{ section.url }}">{{ section.title }}</a> - {{ section.description }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

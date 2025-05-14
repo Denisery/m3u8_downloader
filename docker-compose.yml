@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  m3u8-downloader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: m3u8-downloader-bot
+    restart: unless-stopped
+    environment:
+      # Required Telegram API credentials
+      - API_ID=${API_ID}
+      - API_HASH=${API_HASH}
+      - BOT_TOKEN=${BOT_TOKEN}
+      - ADMIN_USER_IDS=${ADMIN_USER_IDS}
+
+      # Optional configuration with defaults
+      - DOWNLOAD_PATH=/app/downloads
+      - MAX_DOWNLOAD_SIZE=524288000  # 500 MB
+      - CHUNK_SIZE=1048576  # 1 MB
+      - MAX_CONCURRENT_DOWNLOADS=5
+      - DOWNLOAD_TIMEOUT=3600  # 1 hour
+
+      # Web server settings
+      - ENABLE_WEB_SERVER=${ENABLE_WEB_SERVER:-true}
+      - WEB_SERVER_HOST=0.0.0.0
+      - WEB_SERVER_PORT=${WEB_SERVER_PORT:-8080}
+    volumes:
+      - ./downloads:/app/downloads
+    ports:
+      - "${WEB_SERVER_PORT:-8080}:${WEB_SERVER_PORT:-8080}"
+    # Uncomment to see logs in real-time
+    # tty: true
+    # stdin_open: true

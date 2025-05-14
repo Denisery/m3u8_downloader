@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M3U8 Downloader Bot - Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --background-color: #f5f5f5;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #4a6fa5;
+                --secondary-color: #166088;
+                --accent-color: #4fc3f7;
+                --background-color: #121212;
+                --card-background: #1e1e1e;
+                --text-color: #e0e0e0;
+                --border-color: #333333;
+            }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            margin-top: 0;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card-background);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: var(--primary-color);
+            margin-top: 0;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 10px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            margin-bottom: 15px;
+        }
+
+        .stat-label {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: var(--border-color);
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent-color);
+            border-radius: 5px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--secondary-color);
+        }
+
+        .refresh-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .refresh-button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>M3U8 Downloader Bot</h1>
+            <p class="subtitle">System Information & Bot Statistics</p>
+            <nav style="margin-top: 15px;">
+                <a href="/" style="color: var(--primary-color); margin: 0 10px; text-decoration: none; font-weight: bold;">Home</a> |
+                <a href="/docs" style="color: var(--primary-color); margin: 0 10px; text-decoration: none; font-weight: bold;">Documentation</a>
+            </nav>
+        </header>
+
+        <div class="dashboard">
+            <!-- System Information Card -->
+            <div class="card">
+                <h2>System Information</h2>
+                <div class="stat-item">
+                    <div class="stat-label">Operating System</div>
+                    <div class="stat-value">{{ stats.platform.system }} {{ stats.platform.release }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Python Version</div>
+                    <div class="stat-value">{{ stats.platform.python_version }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Machine</div>
+                    <div class="stat-value">{{ stats.platform.machine }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">FFmpeg Version</div>
+                    <div class="stat-value">{{ stats.bot.ffmpeg_version }}</div>
+                </div>
+            </div>
+
+            <!-- Resource Usage Card -->
+            <div class="card">
+                <h2>Resource Usage</h2>
+                <div class="stat-item">
+                    <div class="stat-label">CPU Usage</div>
+                    <div class="stat-value">{{ stats.system.cpu.percent }}% ({{ stats.system.cpu.count }} cores)</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ stats.system.cpu.percent }}%;"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Memory Usage</div>
+                    <div class="stat-value">{{ stats.system.memory.used_formatted }} / {{ stats.system.memory.total_formatted }} ({{ stats.system.memory.percent }}%)</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ stats.system.memory.percent }}%;"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Disk Usage</div>
+                    <div class="stat-value">{{ stats.system.disk.used_formatted }} / {{ stats.system.disk.total_formatted }} ({{ stats.system.disk.percent }}%)</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ stats.system.disk.percent }}%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bot Statistics Card -->
+            <div class="card">
+                <h2>Bot Statistics</h2>
+                <div class="stat-item">
+                    <div class="stat-label">Uptime</div>
+                    <div class="stat-value">{{ stats.bot.uptime_formatted }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Active Downloads</div>
+                    <div class="stat-value">{{ stats.bot.active_downloads }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Downloads</div>
+                    <div class="stat-value">{{ stats.bot.total_downloads }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Completed Downloads</div>
+                    <div class="stat-value">{{ stats.bot.completed_downloads }}</div>
+                </div>
+            </div>
+
+            <!-- Connection Pool Card -->
+            <div class="card">
+                <h2>Connection Pool</h2>
+                <div class="stat-item">
+                    <div class="stat-label">Active Requests</div>
+                    <div class="stat-value">{{ stats.connection_pool.active_requests }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Max Connections</div>
+                    <div class="stat-value">{{ stats.connection_pool.max_connections }}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Avg Request Time</div>
+                    <div class="stat-value">{{ "%.3f"|format(stats.connection_pool.avg_request_time) }} seconds</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Acquired Connections</div>
+                    <div class="stat-value">{{ stats.connection_pool.connector_stats.acquired_connections }}</div>
+                </div>
+            </div>
+
+            <!-- Cache Card -->
+            {% if stats.cache.enabled %}
+            <div class="card">
+                <h2>Cache</h2>
+                <div class="stat-item">
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value">Enabled</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">TTL</div>
+                    <div class="stat-value">{{ stats.cache.ttl }} seconds</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Max Size</div>
+                    <div class="stat-value">{{ stats.cache.max_size // 1024 // 1024 }} MB</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Cached Items</div>
+                    <div class="stat-value">{{ stats.cache.items_count }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Resource Manager Card -->
+            {% if stats.resource_manager.enabled != False %}
+            <div class="card">
+                <h2>Resource Manager</h2>
+                <div class="stat-item">
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value">{% if stats.resource_manager.throttling %}Throttling{% else %}Normal{% endif %}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">CPU Threshold</div>
+                    <div class="stat-value">{{ stats.resource_manager.cpu_threshold }}%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Memory Threshold</div>
+                    <div class="stat-value">{{ stats.resource_manager.memory_threshold }}%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Tasks</div>
+                    <div class="stat-value">{{ stats.resource_manager.current_concurrent_tasks }} running, {{ stats.resource_manager.queued_tasks }} queued</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="text-align: center; margin: 30px 0; padding: 20px; background-color: #d1ecf1; border-radius: 8px; border: 1px solid #bee5eb;">
+            <h3 style="color: var(--primary-color); margin-top: 0;">Need help or more information?</h3>
+            <p>Check out our comprehensive documentation for guides, tutorials, and more.</p>
+            <a href="/docs" style="display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: var(--primary-color); color: white; border-radius: 5px; text-decoration: none; font-weight: bold;">View Documentation</a>
+        </div>
+
+        <button class="refresh-button" onclick="window.location.reload()">Refresh Statistics</button>
+
+        <footer>
+            <p>M3U8 Downloader Bot - System Dashboard</p>
+            <p>Last updated: <span id="last-updated"></span></p>
+        </footer>
+    </div>
+
+    <script>
+        // Set the last updated time
+        document.getElementById('last-updated').textContent = new Date().toLocaleString();
+
+        // Auto refresh every 30 seconds
+        setTimeout(() => {
+            window.location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>
