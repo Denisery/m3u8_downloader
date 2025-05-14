@@ -131,7 +131,7 @@ Clean, modular code design makes it easy to extend and customize.
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/m3u8_downloader.git
+git clone https://github.com/Denisery/m3u8_downloader.git
 
 # Navigate to the project folder
 cd m3u8_downloader
