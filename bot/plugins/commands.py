@@ -151,32 +151,29 @@ async def process_download(client, message, status_message, url, filename, user_
         active_downloads[user_id]['status'] = 'downloading'
 
         # Create downloader and processor instances
-        downloader = M3U8Downloader()
+        downloader = M3U8Downloader(user_id)
         processor = VideoProcessor()
 
-        # Download and process the video
-        # This is a placeholder - implement the actual download and processing logic
+        # Download the video using the real downloader
         await status_message.edit_text("📥 Downloading video... 0%")
+        success, msg, output_path = await downloader.download_m3u8(url, filename)
 
-        # Simulate download progress
-        for i in range(1, 101):
-            active_downloads[user_id]['progress'] = i
-            if i % 10 == 0:
-                await status_message.edit_text(f"📥 Downloading video... {i}%")
-            await asyncio.sleep(0.1)
+        if not success or not output_path:
+            await status_message.edit_text(f"❌ Download failed: {msg}")
+            if user_id in active_downloads:
+                del active_downloads[user_id]
+            return
 
-        # Simulate processing
+        # Simulate processing (optional, or call processor if needed)
         active_downloads[user_id]['status'] = 'processing'
         await status_message.edit_text("🔄 Processing video...")
         await asyncio.sleep(2)
 
-        # Simulate sending the video
-        active_downloads[user_id]['status'] = 'uploading'
-        await status_message.edit_text("📤 Uploading video...")
-        await asyncio.sleep(2)
+        # Notify user of completion
+        await status_message.edit_text("✅ Download complete!\n\nSaved to: " + output_path)
 
-        # Complete
-        await status_message.edit_text("✅ Download complete!")
+        # Clean up temp files after user is notified
+        downloader._cleanup()
 
         # Remove from active downloads
         if user_id in active_downloads:
@@ -327,8 +324,6 @@ async def handle_url(client: Client, message: Message):
         'filename': filename,
         'start_time': time.time()
     }
-
-
 
     # Create a task for the download process
     download_task = asyncio.create_task(

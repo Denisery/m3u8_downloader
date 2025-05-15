@@ -1,6 +1,7 @@
 # sessions file
 *session-journal
 *session
+*tmp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -150,32 +150,38 @@ def get_file_size(file_path: str) -> int:
 
 def create_secure_temp_dir(user_id: int) -> str:
     """
-    Create a secure temporary directory with random name.
-
-    Args:
-        user_id: User ID
-
-    Returns:
-        str: Path to temporary directory
+    Create a secure temporary directory for a user's download session in the project root 'downloads_tmp' folder.
     """
-    import tempfile
+    import os
+    import secrets
+    import hashlib
 
-    # Generate a random token
+    # Ensure the project root 'downloads_tmp' directory exists
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    print(f"[DEBUG] helpers.py project_root: {project_root}")
+    tmp_root = os.path.join(project_root, 'downloads_tmp')
+    print(f"[DEBUG] helpers.py tmp_root: {tmp_root}")
+    try:
+        os.makedirs(tmp_root, exist_ok=True)
+        os.chmod(tmp_root, 0o700)
+        logger.info(f"Ensured tmp root directory exists: {tmp_root}")
+    except Exception as e:
+        logger.warning(f"Could not set up tmp dir: {str(e)}")
+        print(f"[DEBUG] Could not set up tmp dir: {str(e)}")
+
+    # Generate a unique directory name
     random_token = secrets.token_hex(8)
-
-    # Create a hash of the user ID and token
     hash_obj = hashlib.sha256(f"{user_id}_{random_token}".encode())
     dir_name = hash_obj.hexdigest()[:16]
-
-    # Create the temporary directory
-    temp_dir = tempfile.mkdtemp(prefix=f"m3u8_{dir_name}_")
-
-    # Set secure permissions (only owner can read/write/execute)
+    temp_dir = os.path.join(tmp_root, f"m3u8_{dir_name}")
+    print(f"[DEBUG] helpers.py temp_dir: {temp_dir}")
     try:
+        os.makedirs(temp_dir, exist_ok=True)
         os.chmod(temp_dir, 0o700)
+        logger.info(f"Created temp directory for user {user_id}: {temp_dir}")
     except Exception as e:
-        logger.warning(f"Could not set secure permissions on temp dir: {str(e)}")
-
+        logger.warning(f"Could not set up temp dir: {str(e)}")
+        print(f"[DEBUG] Could not set up temp dir: {str(e)}")
     return temp_dir
 
 async def fetch_content(url: str, headers: Optional[Dict[str, str]] = None,
@@ -212,33 +218,33 @@ async def fetch_content(url: str, headers: Optional[Dict[str, str]] = None,
         )
 
         # Use the connection pool to make the request
-        async with pool.get(url, headers=headers, allow_redirects=True, max_redirects=5) as response:
-            if response.status == 200:
-                # Check content type
-                content_type = response.headers.get('Content-Type', '')
-                if not ('text/plain' in content_type or
-                        'application/x-mpegurl' in content_type or
-                        'application/vnd.apple.mpegurl' in content_type or
-                        'audio/mpegurl' in content_type or
-                        'audio/x-mpegurl' in content_type):
-                    logger.warning(f"Unexpected content type for M3U8: {content_type} from {url}")
+        response = await pool.get(url, headers=headers, allow_redirects=True, max_redirects=5)
+        if response.status == 200:
+            # Check content type
+            content_type = response.headers.get('Content-Type', '')
+            if not ('text/plain' in content_type or
+                    'application/x-mpegurl' in content_type or
+                    'application/vnd.apple.mpegurl' in content_type or
+                    'audio/mpegurl' in content_type or
+                    'audio/x-mpegurl' in content_type):
+                logger.warning(f"Unexpected content type for M3U8: {content_type} from {url}")
 
-                # Check content length
-                content_length = response.content_length
-                if content_length and content_length > max_size:
-                    logger.error(f"Content too large: {content_length} bytes (max: {max_size})")
-                    return None
-
-                # Read with size limit
-                content = await response.read()
-                if len(content) > max_size:
-                    logger.error(f"Content too large: {len(content)} bytes (max: {max_size})")
-                    return None
-
-                return content.decode('utf-8', errors='replace')
-            else:
-                logger.error(f"Failed to fetch URL {url}, status code: {response.status}")
+            # Check content length
+            content_length = response.content_length
+            if content_length and content_length > max_size:
+                logger.error(f"Content too large: {content_length} bytes (max: {max_size})")
                 return None
+
+            # Read with size limit
+            content = await response.read()
+            if len(content) > max_size:
+                logger.error(f"Content too large: {len(content)} bytes (max: {max_size})")
+                return None
+
+            return content.decode('utf-8', errors='replace')
+        else:
+            logger.error(f"Failed to fetch URL {url}, status code: {response.status}")
+            return None
     except aiohttp.ClientError as e:
         logger.error(f"Client error fetching URL {url}: {str(e)}")
         return None

@@ -38,6 +38,7 @@ class M3U8Downloader:
     """
 
     def __init__(self, user_id: int):
+        print(f"[DEBUG] M3U8Downloader __init__ called for user_id: {user_id}")
         """
         Initialize the M3U8 downloader with secure file handling.
 
@@ -48,6 +49,7 @@ class M3U8Downloader:
 
         # Create a secure temporary directory with randomized name
         self.temp_dir = create_secure_temp_dir(user_id)
+        print(f"[DEBUG] M3U8Downloader temp_dir: {self.temp_dir}")
 
         # Ensure download path is secure
         self.download_path = os.path.abspath(DOWNLOAD_PATH)
@@ -73,6 +75,7 @@ class M3U8Downloader:
             logger.warning(f"Could not set secure permissions on download directory: {str(e)}")
 
     async def download_m3u8(self, url: str, output_filename: str) -> Tuple[bool, str, Optional[str]]:
+        print(f"[DEBUG] download_m3u8 called with url: {url}, output_filename: {output_filename}")
         """
         Download an M3U8 playlist and all its segments with enhanced security.
 
@@ -179,15 +182,13 @@ class M3U8Downloader:
             output_path = os.path.join(self.download_path, output_filename)
             result = await self._download_segments(playlist, base_url, output_path)
 
-            # Clean up
-            self._cleanup()
-
             if result[0]:
                 active_downloads[self.user_id]['status'] = 'completed'
                 active_downloads[self.user_id]['progress'] = 100
                 return True, f"Download completed: {output_filename}", output_path
             else:
                 active_downloads[self.user_id]['status'] = 'failed'
+                self._cleanup()
                 return False, result[1], None
 
         except Exception as e:
@@ -198,6 +199,7 @@ class M3U8Downloader:
             return False, f"Error downloading M3U8: {str(e)}", None
 
     async def _download_segments(self, playlist: m3u8.M3U8, base_url: str, output_path: str) -> Tuple[bool, str]:
+        print(f"[DEBUG] _download_segments called, temp_dir: {self.temp_dir}")
         """
         Download all segments from a playlist and merge them using the connection pool.
 
@@ -253,6 +255,7 @@ class M3U8Downloader:
             return False, f"Error downloading segments: {str(e)}"
 
     async def _download_segment(self, pool, url: str, path: str, index: int) -> bool:
+        print(f"[DEBUG] _download_segment called for segment {index}, url: {url}, path: {path}")
         """
         Download a single segment using the connection pool.
 
@@ -270,27 +273,30 @@ class M3U8Downloader:
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
 
-            async with pool.get(url, headers=headers) as response:
-                if response.status != 200:
-                    logger.error(f"Failed to download segment {index}: HTTP {response.status}")
-                    return False
+            response = await pool.get(url, headers=headers)
+            print(f"[DEBUG] Segment {index} HTTP status: {response.status}")
+            if response.status != 200:
+                logger.error(f"Failed to download segment {index}: HTTP {response.status}")
+                return False
 
-                # Check content length if available
-                content_length = response.content_length
-                if content_length and self.total_size + content_length > self.max_size:
-                    logger.error(f"Download would exceed maximum size limit of {self.max_size} bytes")
-                    return False
+            # Check content length if available
+            content_length = response.content_length
+            if content_length and self.total_size + content_length > self.max_size:
+                logger.error(f"Download would exceed maximum size limit of {self.max_size} bytes")
+                return False
 
-                async with aiofiles.open(path, 'wb') as f:
-                    async for chunk in response.content.iter_chunked(self.chunk_size):
-                        await f.write(chunk)
-                        self.total_size += len(chunk)
+            async with aiofiles.open(path, 'wb') as f:
+                print(f"[DEBUG] Writing segment {index} to {path}")
+                async for chunk in response.content.iter_chunked(self.chunk_size):
+                    await f.write(chunk)
+                    self.total_size += len(chunk)
 
-                        # Check if we've exceeded the maximum size
-                        if self.total_size > self.max_size:
-                            logger.error(f"Download exceeded maximum size limit of {self.max_size} bytes")
-                            return False
+                    # Check if we've exceeded the maximum size
+                    if self.total_size > self.max_size:
+                        logger.error(f"Download exceeded maximum size limit of {self.max_size} bytes")
+                        return False
 
+            print(f"[DEBUG] Finished writing segment {index} to {path}")
             self.downloaded_segments += 1
 
             # Update progress
@@ -302,6 +308,7 @@ class M3U8Downloader:
 
         except Exception as e:
             logger.error(f"Error downloading segment {index}: {str(e)}")
+            print(f"[DEBUG] Error downloading segment {index}: {str(e)}")
             return False
 
     async def _merge_segments(self, segment_files: List[str], output_path: str) -> Tuple[bool, str]:
@@ -323,20 +330,20 @@ class M3U8Downloader:
                 return False, f"FFmpeg not available: {ffmpeg_message}"
 
             # Create a file list for ffmpeg
-            file_list_path = os.path.join(self.temp_dir, "filelist.txt")
-
-            # Use platform-safe path handling
-            file_list_path = os.path.normpath(file_list_path)
+            file_list_path = os.path.abspath(os.path.join(self.temp_dir, "filelist.txt"))
+            logger.info(f"FFmpeg filelist.txt path: {file_list_path}")
 
             async with aiofiles.open(file_list_path, 'w') as f:
                 for segment_file in segment_files:
-                    if os.path.exists(segment_file):
-                        # Normalize path for the current platform
-                        normalized_path = os.path.normpath(segment_file)
-                        # Escape backslashes in Windows paths for the filelist.txt
+                    abs_path = os.path.abspath(segment_file)
+                    if os.path.exists(abs_path):
+                        logger.info(f"Adding segment to filelist: {abs_path}")
+                        normalized_path = os.path.normpath(abs_path)
                         if platform.system().lower() == 'windows':
                             normalized_path = normalized_path.replace('\\', '\\\\')
                         await f.write(f"file '{normalized_path}'\n")
+                    else:
+                        logger.error(f"Segment file missing: {abs_path}")
 
             # Use ffmpeg to concatenate the segments
             cmd = [

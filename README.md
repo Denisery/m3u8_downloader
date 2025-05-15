@@ -109,7 +109,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see our [Contributing Guide](/web/docs/contributing.md) for more details.
+Contributions are welcome! Please see our [Contributing Guide](.github/ISSUE_TEMPLATE) for more details.
 
 ---
 
