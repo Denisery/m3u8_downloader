@@ -86,7 +86,7 @@ RUN useradd -m appuser && \
 USER appuser
 
 # Command to run the application
-CMD ["python", "main.py"]
+CMD ["python3", "main.py"]
 
 # =============================================================================
 # USAGE INSTRUCTIONS

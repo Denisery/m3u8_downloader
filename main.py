@@ -3,6 +3,7 @@ import sys
 import logging
 import asyncio
 import platform
+from pyrogram import idle
 from bot.client import BotClient
 from config.config import (
     DOWNLOAD_PATH, ENABLE_WEB_SERVER,
@@ -155,15 +156,7 @@ async def main():
             await close_resource_manager()
             logger.info("Resource manager closed")
 
-async def idle():
-    """
-    Keep the program running until interrupted.
-    """
-    try:
-        while True:
-            await asyncio.sleep(1)
-    except asyncio.CancelledError:
-        pass
+
 
 if __name__ == "__main__":
     try:

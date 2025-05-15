@@ -15,21 +15,22 @@
             <nav>
                 <a href="/">Home</a> |
                 <a href="/docs">Documentation</a> |
-                <a href="/docs/security">Security</a> |
-                <a href="/docs/docker">Docker Guide</a> |
-                <a href="/docs/cross-platform">Cross-Platform</a>
+                <a href="/docs/installation">Installation</a> |
+                <a href="/docs/usage">Usage</a> |
+                <a href="/docs/features">Features</a> |
+                <a href="/docs/troubleshooting">Troubleshooting</a>
             </nav>
         </header>
-        
+
         <main>
             {% block content %}{% endblock %}
         </main>
-        
+
         <footer class="docs-footer">
-            <p>M3U8 Downloader Bot &copy; {% now 'Y' %}</p>
+            <p>M3U8 Downloader Bot &copy; {{ now().strftime('%Y') }}</p>
         </footer>
     </div>
-    
+
     <script src="/static/js/docs.js"></script>
     {% block extra_js %}{% endblock %}
 </body>

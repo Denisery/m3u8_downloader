@@ -27,8 +27,8 @@ jinja_env = jinja2.Environment(
     autoescape=jinja2.select_autoescape(['html', 'xml'])
 )
 
-# Add custom filters
-jinja_env.filters['now'] = lambda format_string: datetime.datetime.now().strftime(format_string)
+# Add custom functions
+jinja_env.globals['now'] = datetime.datetime.now
 
 class WebServer:
     """
@@ -68,18 +68,53 @@ class WebServer:
                 'file': 'overview.md'
             },
             {
+                'id': 'installation',
+                'title': 'Installation Guide',
+                'url': '/docs/installation',
+                'description': 'Complete installation instructions for all platforms',
+                'file': 'installation.md'
+            },
+            {
+                'id': 'configuration',
+                'title': 'Configuration Guide',
+                'url': '/docs/configuration',
+                'description': 'Configuration options and settings',
+                'file': 'configuration.md'
+            },
+            {
+                'id': 'usage',
+                'title': 'Usage Guide',
+                'url': '/docs/usage',
+                'description': 'Detailed usage instructions with examples',
+                'file': 'usage.md'
+            },
+            {
+                'id': 'features',
+                'title': 'Features',
+                'url': '/docs/features',
+                'description': 'In-depth explanation of all features',
+                'file': 'features.md'
+            },
+            {
+                'id': 'troubleshooting',
+                'title': 'Troubleshooting Guide',
+                'url': '/docs/troubleshooting',
+                'description': 'Solutions for common issues',
+                'file': 'troubleshooting.md'
+            },
+            {
+                'id': 'api',
+                'title': 'API Documentation',
+                'url': '/docs/api',
+                'description': 'API documentation for programmatic integration',
+                'file': 'api.md'
+            },
+            {
                 'id': 'security',
                 'title': 'Security Guide',
                 'url': '/docs/security',
                 'description': 'Security features and best practices',
                 'file': 'security.md'
-            },
-            {
-                'id': 'scalability',
-                'title': 'Scalability Guide',
-                'url': '/docs/scalability',
-                'description': 'Scalability features and performance optimization',
-                'file': 'scalability.md'
             },
             {
                 'id': 'docker',
@@ -96,11 +131,11 @@ class WebServer:
                 'file': 'cross-platform.md'
             },
             {
-                'id': 'configuration',
-                'title': 'Configuration Guide',
-                'url': '/docs/configuration',
-                'description': 'Configuration options and settings',
-                'file': 'configuration.md'
+                'id': 'scalability',
+                'title': 'Scalability Guide',
+                'url': '/docs/scalability',
+                'description': 'Scalability features and performance optimization',
+                'file': 'scalability.md'
             }
         ]
 
